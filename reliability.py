@@ -33,6 +33,10 @@ class Feeder():
         return "<Feeder from:%s to:%s length:%s>" % (self.start, self.end, self.length)
 
 def getFeeders(feeds):
+    '''
+    Format of the data in the text file is as follows:
+    ID START END LENGTH
+    '''
     with open('feeder.txt', 'r') as f:
         for entry in f:
             temp = entry.split()
@@ -40,6 +44,10 @@ def getFeeders(feeds):
             feeds.append(feed)
 
 def getLoads(loads):
+    '''
+    Format of the data in the text file is as follows:
+    ID NUM_OF_CONSUMERS BUS
+    '''
     with open('load.txt', 'r') as f:
         for entry in f:
             temp = entry.split()
