@@ -10,7 +10,31 @@ class Bus():
             self.feeders.append(feeder)
 
     def addLoad(self, load):
-        self.loads.append(load)
+        if load.bus == self.number:
+            self.loads.append(load)
+
+    def __repr__(self):
+        feedlist = self.getFeeders()
+        feeds = ''
+        for elem in feedlist:
+            feeds += str(elem) + ' '
+        loadlist = self.getLoads()
+        loads = ''
+        for elem in loadlist:
+            loads += str(elem) + ' '
+        return "<Bus Number: %s Feeders: %s Loads: %s>" % (self.number, feeds, loads)
+
+    def getFeeders(self):
+        temp = []
+        for feed in self.feeders:
+            temp.append(feed.id)
+        return temp
+    
+    def getLoads(self):
+        temp = []
+        for load in self.loads:
+            temp.append(load.id)
+        return temp
 
 class Load():
     def __init__(self, id, num, busnum):
@@ -54,11 +78,24 @@ def getLoads(loads):
             load = Load(int(temp[0]), int(temp[1]), int(temp[2]))
             loads.append(load)
 
+def createBuses(network):
+    buses = []
+    for item in range(1,13):
+        bus = Bus(item)
+        for feed in network['feeder']:
+            bus.addFeeder(feed)
+        for load in network['load']:
+            bus.addLoad(load)
+        buses.append(bus)
+    return buses
+
 def main():
     network= {'feeder':[], 'load':[], 'bus':[]}
     getFeeders(network['feeder'])
     getLoads(network['load'])
-    print(network)
+    network['bus'] = createBuses(network)
+    for elem in network['bus']:
+        print(elem)
         
 
 if __name__ == '__main__':
