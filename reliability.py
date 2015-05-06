@@ -4,6 +4,7 @@ class Bus():
         self.number = num
         self.feeders = []
         self.loads = []
+        self.connectedload = 0
 
     def addFeeder(self, feeder):
         if (feeder.start == self.number) or (feeder.end == self.number):
@@ -12,25 +13,26 @@ class Bus():
     def addLoad(self, load):
         if load.bus == self.number:
             self.loads.append(load)
+            self.connectedload += load.load
 
     def __repr__(self):
-        feedlist = self.getFeeders()
+        feedlist = self.getFeederList()
         feeds = ''
         for elem in feedlist:
             feeds += str(elem) + ' '
-        loadlist = self.getLoads()
+        loadlist = self.getLoadList()
         loads = ''
         for elem in loadlist:
             loads += str(elem) + ' '
-        return "<Bus Number: %s Feeders: %s Loads: %s>" % (self.number, feeds, loads)
+        return "<Bus Number: %s Feeders: %s Loads: %s Connected Load: %s>" % (self.number, feeds, loads, self.connectedload)
 
-    def getFeeders(self):
+    def getFeederList(self):
         temp = []
         for feed in self.feeders:
             temp.append(feed.id)
         return temp
     
-    def getLoads(self):
+    def getLoadList(self):
         temp = []
         for load in self.loads:
             temp.append(load.id)
