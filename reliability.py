@@ -13,42 +13,43 @@ class Bus():
         self.loads.append(load)
 
 class Load():
-    def __init__(self, busnum, num):
+    def __init__(self, id, num, busnum):
         self.consumers = num
-        self.load = num*800
+        self.load = num*0.8
         self.bus = busnum
+        self.id = id
 
+    def __repr__(self):
+        return "<Load load:%.5skW at bus:%s>" % (self.load, self.bus)
+    
 class Feeder():
-    def __init__(self, frombus, tobus, length):
+    def __init__(self, id, frombus, tobus, length):
+        self.id = id
         self.start = frombus
         self.end = tobus
         self.length = length
 
+    def __repr__(self):
+        return "<Feeder from:%s to:%s length:%s>" % (self.start, self.end, self.length)
+
+def getFeeders(feeds):
+    with open('feeder.txt', 'r') as f:
+        for entry in f:
+            temp = entry.split()
+            feed = Feeder(int(temp[0]), int(temp[1]), int(temp[2]), int(temp[3]))
+            feeds.append(feed)
+
+def getLoads(loads):
+    with open('load.txt', 'r') as f:
+        for entry in f:
+            temp = entry.split()
+            load = Load(int(temp[0]), int(temp[1]), int(temp[2]))
+            loads.append(load)
+
 def main():
-    network= {'feeder':[], 'load':[]}
-    print("Create the network \n")
-    print("Press the following Feeder(F), Load(L) or exit(X)")
-    while True:
-        option = input("Choose your option: ")
-        if option == 'F':
-            inp = ''
-            while True:
-                inp = input("Enter feeder details: ")
-                if inp == 'x': break
-                temp = inp.split()
-                feed = Feeder(int(temp[0]), int(temp[1]), int(temp[2]))
-                network['feeder'].append(feed)
-                
-        elif option == 'L':
-            inp = ''
-            while True:
-                inp = input("Enter load details: ")
-                if inp == 'x': break
-                temp = inp.split()
-                load = Load(int(temp[0]))
-                network['load'].append(load)
-        elif option == 'x':
-            break
+    network= {'feeder':[], 'load':[], 'bus':[]}
+    getFeeders(network['feeder'])
+    getLoads(network['load'])
     print(network)
         
 
