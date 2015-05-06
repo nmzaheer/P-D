@@ -24,7 +24,7 @@ class Bus():
         loads = ''
         for elem in loadlist:
             loads += str(elem) + ' '
-        return "<Bus Number: %s Feeders: %s Loads: %s Connected Load: %s>" % (self.number, feeds, loads, self.connectedload)
+        return "<Bus Number: %s Feeders: %s\t Loads: %s\t Connected Load: %.5skW>" % (self.number, feeds, loads, self.connectedload)
 
     def getFeederList(self):
         temp = []
