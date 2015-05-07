@@ -36,10 +36,15 @@ class Network():
             ranklist[key] = (temp + perm) * self.bus[self.feeder[key].end].total_load
         return ranklist
 
-    def get_total_feeder_length(self):
+    def get_total_feeder_length(self, bus):
         total = 0
-        for (key,value) in self.feeder.items():
-            total += value.get_length()
+        feeds = []
+        for (key, value) in self.feeder.items():
+        	if value.start == bus:
+        		feeds.append(key)
+        for feed in feeds:
+        	total += self.get_total_feeder_length(self.feeder[feed].end)
+        	total += self.feeder[feed].length
         return total
 
     def get_total_network_load(self):
@@ -129,18 +134,18 @@ def main():
     ranking = lvgrid.get_fault_probability()
     #ranklist = sorted(ranking.items(), key= lambda x: x[1], reverse=True)
     #print(ranklist)
-    length = lvgrid.get_total_feeder_length()
-    total_demand = lvgrid.get_total_network_load()
-    num_of_faults = (TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY) * length / 1000
-    load_interrupted = (lvgrid.bus[1].total_load + lvgrid.bus[2].total_load)
-    tiepi = (load_interrupted) * (TEMP_FAULT_DURATION + PERMANENT_FAULT_DURATION) / total_demand
-    niepi = TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY
-    print("Total feeder length: %s m " % (length))
+    length1 = lvgrid.get_total_feeder_length(1)
+    length2 = lvgrid.get_total_feeder_length(2)
+    total_demand = 1600
+    num_of_faults1 = (TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY) * length1 / 1000
+    num_of_faults2 = (TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY) * length2 / 1000
+    load_interrupted1 = lvgrid.bus[1].total_load
+    load_interrupted2 = lvgrid.bus[2].total_load
+    tiepi = (load_interrupted1*num_of_faults1 + load_interrupted2*num_of_faults2) * (TEMP_FAULT_DURATION + PERMANENT_FAULT_DURATION) / total_demand
+    niepi = (load_interrupted1*num_of_faults1 + load_interrupted2*num_of_faults2) / total_demand
     print("Total demand: %s kW" %(total_demand))
-    print("No. of faults per year: ", num_of_faults)
     print("TIEPI: %s mins/yr" %(tiepi))
     print('NIEPI: %s int/yr' %(niepi))
-    
 
 if __name__ == '__main__':
     main()
