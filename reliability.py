@@ -5,18 +5,18 @@ TEMP_FAULT_DURATION = 15
 PERMANENT_FAULT_DURATION = 75
 
 class Network():
-    def __init__(self, num):
-        self.bus = self.addBuses(num)
-        self.feeder = self.addFeeder()
+    def __init__(self, num, feeders, loads):
+        self.bus = self.addBuses(num, loads)
+        self.feeder = feeders
         
-    def addBuses(self,num):
+    def addBuses(self,num, loads):
         buses = {}
         for item in range(1, num+1):
-            bus = Bus(item)
-            loads = getLoads()
-            for load in loads:
-                bus.addLoad(load)
-            buses[item] = bus
+            bus = Bus(item, Load(100, 0, 0, item))
+            for k,v in loads.items():
+                if v.bus == item:
+                    bus = Bus(item, v)
+            buses[bus.id] = bus
         return buses
 
     def addFeeder(self):
@@ -57,32 +57,17 @@ class Network():
         return "<Network Buses:%s Feeders:%s>" % (len(self.bus), len(self.feeder))
 
 class Bus():
-    def __init__(self, num):
+    def __init__(self, num, load):
         self.id = num
-        self.loads = {}
-        self.connected_load = 0
-        self.total_load = 0
-
-    def get_total_load(self):
-        return self.total_load
-
-    def addLoad(self, load):
-        if load.bus == self.id:
-            self.loads[load.id] = load
-            self.connected_load += load.load
-            self.total_load += load.load
+        self.connected_load = load
 
     def __repr__(self):
-        loadlist = list(self.loads.keys())
-        loads = ''
-        for elem in loadlist:
-            loads += str(elem) + ' '
-        return "<Bus Number: %s\tLoads: %s\tConnected Load: %.5skW\tTotal Load: %.6skW>" % (self.id, loads, self.connected_load, self.total_load)
+        return "<Bus Number: %s\tConnected Load: %.5skW>" % (self.id, self.connected_load.load)
 
 class Load():
-    def __init__(self, id, num, busnum):
+    def __init__(self, id, num, load, busnum):
         self.consumers = num
-        self.load = num*0.8
+        self.load = load
         self.bus = busnum
         self.id = id
 
@@ -95,57 +80,48 @@ class Feeder():
         self.start = frombus
         self.end = tobus
         self.length = length
+        self.ms = False
 
     def get_length(self):
         return self.length
 
     def __repr__(self):
-        return "<Feeder from:%s to:%s length:%s>" % (self.start, self.end, self.length)
+        return "<Feeder from:%s to:%s length:%s Km>" % (self.start, self.end, self.length)
 
 def getFeeders():
     '''
     Format of the data in the text file is as follows:
-    ID START END LENGTH
+    ID LENGTH START END
     '''
-    feeds = []
+    feeds = {}
     with open('feeder.txt', 'r') as f:
         for entry in f:
             temp = entry.split()
-            feed = Feeder(int(temp[0]), int(temp[1]), int(temp[2]), int(temp[3]))
-            feeds.append(feed)
+            feed = Feeder(int(temp[0]), int(temp[2]), int(temp[3]), float(temp[1]))
+            feeds[feed.id] = feed
     return feeds
 
 def getLoads():
     '''
     Format of the data in the text file is as follows:
-    ID NUM_OF_CONSUMERS BUS
+    ID BUS LOAD NUM_OF_CONSUMERS
     '''
-    loads = []
+    loads = {}
     with open('load.txt', 'r') as f:
         for entry in f:
             temp = entry.split()
-            load = Load(int(temp[0]), int(temp[1]), int(temp[2]))
-            loads.append(load)
+            load = Load(int(temp[0]), int(temp[3]), float(temp[2]), int(temp[1]))
+            loads[load.id] = load
     return loads
 
 
 def main():
-    lvgrid = Network(12)
-    ranking = lvgrid.get_fault_probability()
-    #ranklist = sorted(ranking.items(), key= lambda x: x[1], reverse=True)
-    #print(ranklist)
-    length1 = lvgrid.get_total_feeder_length(1)
-    length2 = lvgrid.get_total_feeder_length(2)
-    total_demand = 1600
-    num_of_faults1 = (TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY) * length1 / 1000
-    num_of_faults2 = (TEMP_FAULT_PROBABILITY + PERMANENT_FAULT_PROBABILITY) * length2 / 1000
-    load_interrupted1 = lvgrid.bus[1].total_load
-    load_interrupted2 = lvgrid.bus[2].total_load
-    tiepi = (load_interrupted1*num_of_faults1 + load_interrupted2*num_of_faults2) * (TEMP_FAULT_DURATION + PERMANENT_FAULT_DURATION) / total_demand
-    niepi = (load_interrupted1*num_of_faults1 + load_interrupted2*num_of_faults2) / total_demand
-    print("Total demand: %s kW" %(total_demand))
-    print("TIEPI: %s mins/yr" %(tiepi))
-    print('NIEPI: %s int/yr' %(niepi))
+    feeders = getFeeders()
+    loads = getLoads()
+    net = Network(21, feeders, loads)
+    for k,v in net.bus.items():
+        print(v)
+
 
 if __name__ == '__main__':
     main()
