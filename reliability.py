@@ -1,4 +1,7 @@
 
+FAILURE_RATE = 1.49
+REPAIR_TIME = 90
+SWITCHING_TIME = 30
 TEMP_FAULT_PROBABILITY = 0.11
 PERMANENT_FAULT_PROBABILITY = 0.075
 TEMP_FAULT_DURATION = 15
@@ -11,22 +14,13 @@ class Network():
         
     def addBuses(self,num, loads):
         buses = {}
-        for item in range(1, num+1):
+        for item in range(0, num+1):
             bus = Bus(item, Load(100, 0, 0, item))
             for k,v in loads.items():
                 if v.bus == item:
                     bus = Bus(item, v)
             buses[bus.id] = bus
         return buses
-
-    def addFeeder(self):
-        feeds = {}
-        feeders = getFeeders()
-        feeders.reverse()
-        for feeder in feeders:
-            feeds[feeder.id] = feeder
-            self.bus[feeder.start].total_load += self.bus[feeder.end].total_load
-        return feeds
 
     def get_fault_probability(self):
         ranklist = {}
@@ -60,6 +54,10 @@ class Bus():
     def __init__(self, num, load):
         self.id = num
         self.connected_load = load
+        self.connected_feeders = []
+
+    def addFeeder(self, feed):
+        self.connected_feeders.append(feed)
 
     def __repr__(self):
         return "<Bus Number: %s\tConnected Load: %.5skW>" % (self.id, self.connected_load.load)
@@ -80,6 +78,12 @@ class Feeder():
         self.start = frombus
         self.end = tobus
         self.length = length
+        self.ms = False
+
+    def set_switch(self):
+        self.ms = True
+
+    def unset_switch(self):
         self.ms = False
 
     def get_length(self):
@@ -119,8 +123,14 @@ def main():
     feeders = getFeeders()
     loads = getLoads()
     net = Network(21, feeders, loads)
+    switch_list = [4, 6, 9, 11, 18]
+    for item in switch_list:
+        net.feeder[item].set_switch()
+    for k,v in net.feeder.items():
+        net.bus[v.start].addFeeder(v.id)
+        net.bus[v.end].addFeeder(v.id)
     for k,v in net.bus.items():
-        print(v)
+        print(k, v.connected_feeders)
 
 
 if __name__ == '__main__':
